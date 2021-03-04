@@ -3,7 +3,7 @@
 ![pdk-validate](https://github.com/ncsa/puppet-profile_motd/workflows/pdk-validate/badge.svg)
 ![yamllint](https://github.com/ncsa/puppet-profile_motd/workflows/yamllint/badge.svg)
 
-NCSA Common Puppet Profiles - configure depending on virtualization hypervisor type
+NCSA Common Puppet Profiles - configure motd
 
 ## Table of Contents
 
@@ -18,7 +18,7 @@ NCSA Common Puppet Profiles - configure depending on virtualization hypervisor t
 
 ## Description
 
-This puppet profile customizes a host depending on the virtualization hypervisor type in use.
+This puppet profile customizes a host's message of the day (motd).
 
 ## Setup
 
