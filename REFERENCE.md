@@ -2,14 +2,33 @@
 
 ## Reference
 
-### `profile_virtual::vmware`
+### `profile_motd`
 
 #### Parameters
 
-##### `packages`
+##### `next_maintenance`
 
-List of required packages for VMware. Valid options: 'array of strings'.
+Tuple with two date stamps, e.g., '2017-10-19T08:00:00'
+First element may be 'none' to prevent information about Next 
+maintenance from showing (e.g., if next maintenance is distant).
+Valid options: 'tuple array of strings'.
 
-##### `services`
+Default: 'none'.
 
-List of services to run for VMware. Valid options: 'array of strings'.
+##### `next_maintenance_timezone`
+
+Timezone used for `next_maintenance`. Valid options: 'string'.
+
+Default: 'CT'.
+
+##### `next_maintenance_details`
+
+More details about the `next_maintenance`. Valid options: 'string'.
+
+Default: ''.
+
+##### `notice`
+
+An additional message to add to the end of the motd. Valid options: 'string'.
+
+Default: ''.
