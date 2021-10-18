@@ -78,4 +78,18 @@ Next scheduled maintenance: ${date_string} ${next_maintenance_details}"
     group   => '0',
   }
 
+  if ($facts['os']['release']['major'] < '8' and $facts['os']['family'] == 'RedHat') {
+    ## ADD /etc/motd.d/* SUPPORT TO RHEL7, ETC
+    File {
+      mode   => '0644',
+    }
+    file { '/etc/profile.d/motd.csh':
+      source => "puppet:///modules/${module_name}/etc/profile.d/motd.csh",
+    }
+    file { '/etc/profile.d/motd.sh':
+      source => "puppet:///modules/${module_name}/etc/profile.d/motd.sh",
+    }
+    ensure_resource( 'file', '/etc/motd.d', { 'ensure' => 'directory', 'mode' => '0755', })
+  }
+
 }
