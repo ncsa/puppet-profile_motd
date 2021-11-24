@@ -57,16 +57,15 @@ Next scheduled maintenance: ${date_string} ${next_maintenance_details}"
     String[1] => "\n${notice}",
   }
 
-  $hw_array = split($::manufacturer, Regexp['[\s,]'])
+  $hw_array = split($facts['dmi']['manufacturer'], Regexp['[\s,]'])
   $hardware = $hw_array[0]
-  $memorysize_gb = ceiling($::memorysize_mb/1024)
-  $cpu_array = split($::processor0, ' @ ')
-  $cpu_speed = $cpu_array[1]
+  $memorysize_gb = ceiling($facts['memory']['system']['total_bytes']/1024)
+  $cpu_speed = $facts['processors']['speed']
 
   ## MOTD SYSTEM INFORMATION
   $motdcontent = @("EOF")
-    ${::fqdn} (${::ipaddress})
-      OS: ${::operatingsystem} ${::operatingsystemrelease}   HW: ${hardware}   CPU: ${::processorcount}x ${cpu_speed}   RAM: ${memorysize_gb} GB
+    ${facts['fqdn']} (${facts['ipaddress']})
+      OS: ${facts['os']['name']} ${facts['os']['release']['full']}}  HW: ${hardware}   CPU: ${facts['processor']['count']}x ${cpu_speed}   RAM: ${memorysize_gb} GB
       Site: ${::site}  Role: ${::role}${notice_message}${maintenance_message}
     | EOF
 
