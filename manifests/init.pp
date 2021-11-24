@@ -65,7 +65,7 @@ Next scheduled maintenance: ${date_string} ${next_maintenance_details}"
   ## MOTD SYSTEM INFORMATION
   $motdcontent = @("EOF")
     ${facts['fqdn']} (${facts['ipaddress']})
-      OS: ${facts['os']['name']} ${facts['os']['release']['full']}}  HW: ${hardware}   CPU: ${facts['processor']['count']}x ${cpu_speed}   RAM: ${memorysize_gb} GB
+      OS: ${facts['os']['name']} ${facts['os']['release']['full']}  HW: ${hardware}   CPU: ${facts['processor']['count']}x ${cpu_speed}   RAM: ${memorysize_gb} GB
       Site: ${::site}  Role: ${::role}${notice_message}${maintenance_message}
     | EOF
 
