@@ -1,4 +1,5 @@
 ---
+profile_motd::hide_enc: false
 profile_motd::next_maintenance:
   - "none"
   - "none"

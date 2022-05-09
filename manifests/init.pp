@@ -1,23 +1,27 @@
 # @summary Configure motd
 #
+# @param hide_enc
+#   If set, hide ENC data from the motd.
+#   Instead display ENC data for the root user via profile.d file
+#
 # @param next_maintenance
-#        tuple with two date stamps, e.g., '2017-10-19T08:00:00'
-#        first element may be 'none' to prevent information about
-#        next maintenance from showing (e.g., if next maintenance is distant)
+#   tuple with two date stamps, e.g., '2017-10-19T08:00:00'
+#   first element may be 'none' to prevent information about
+#   next maintenance from showing (e.g., if next maintenance is distant)
 #
 # @param next_maintenance_timezone
-#        timezone used for next_maintenance
+#   timezone used for next_maintenance
 #
 # @param next_maintenance_details
-#        more details about next_maintenance
+#   more details about next_maintenance
 #
 # @param notice
-#        An additional message to add to the end of the motd
+#   An additional message to add to the end of the motd
 #
 # @example
 #   include profile_motd
 class profile_motd (
-  # Parameters
+  Boolean $hide_enc,                 # boolean to hide ENC data from motd, instead display for root via profile.d file
   Array[String] $next_maintenance,   # tuple with two date stamps, e.g., '2017-10-19T08:00:00'
   String $next_maintenance_timezone, # timezone used for next_maintenance
   String $next_maintenance_details,  # more details about next_maintenance
@@ -62,17 +66,25 @@ Next scheduled maintenance: ${date_string} ${next_maintenance_details}"
   $memorysize_gb = ceiling($::memorysize_mb/1024)
   $cpu_array = split($::processor0, ' @ ')
   $cpu_speed = $cpu_array[1]
-
-  ## MOTD SYSTEM INFORMATION
-  $motdcontent = @("EOF")
-    ${::fqdn} (${::ipaddress})
-      OS: ${::operatingsystem} ${::operatingsystemrelease}   HW: ${hardware}   CPU: ${::processorcount}x ${cpu_speed}   RAM: ${memorysize_gb} GB
-      Site: ${::site}  Role: ${::role}${notice_message}${maintenance_message}
-    | EOF
+  if ! $hide_enc {
+    $motd_enc = "\n  Site: ${::site}  Role: ${::role}"
+    $profile_ensure = 'absent'
+  } else {
+    $motd_enc = ''
+    $profile_ensure = 'file'
+  }
 
   file { '/etc/motd':
     ensure  => file,
-    content => $motdcontent,
+    content => template('profile_motd/motd.erb'),
+    mode    => '0644',
+    owner   => '0',
+    group   => '0',
+  }
+
+  file { '/etc/profile.d/puppet_enc_display.sh':
+    ensure  => $profile_ensure,
+    content => template('profile_motd/puppet_enc_display.sh.erb'),
     mode    => '0644',
     owner   => '0',
     group   => '0',
