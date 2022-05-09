@@ -1,0 +1,3 @@
+if [[ $EUID -eq 0 ]]; then
+  echo "Environment: <%= @environment %>  Role: <%= @role %>  Site: <%= @site %>"
+fi

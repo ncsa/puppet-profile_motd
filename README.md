@@ -13,8 +13,6 @@ NCSA Common Puppet Profiles - configure motd
     * [Setup requirements](#setup-requirements)
     * [Beginning with profile_motd](#beginning-with-profile_motd)
 1. [Usage - Configuration options and additional functionality](#usage)
-1. [Limitations - OS compatibility, etc.](#limitations)
-1. [Development - Guide for contributing to the module](#development)
 
 ## Description
 
@@ -54,11 +52,3 @@ You can add a notice that the server will be undergoing maintenance by setting t
 ## Reference
 
 See: [REFERENCE.md](REFERENCE.md)
-
-## Limitations
-
-n/a
-
-## Development
-
-This Common Puppet Profile is managed by NCSA for internal usage.

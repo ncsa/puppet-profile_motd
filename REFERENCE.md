@@ -26,10 +26,18 @@ include profile_motd
 
 The following parameters are available in the `profile_motd` class:
 
+* [`hide_enc`](#hide_enc)
 * [`next_maintenance`](#next_maintenance)
 * [`next_maintenance_timezone`](#next_maintenance_timezone)
 * [`next_maintenance_details`](#next_maintenance_details)
 * [`notice`](#notice)
+
+##### <a name="hide_enc"></a>`hide_enc`
+
+Data type: `Boolean`
+
+If set, hide ENC data from the motd.
+Instead display ENC data for the root user via profile.d file
 
 ##### <a name="next_maintenance"></a>`next_maintenance`
 
