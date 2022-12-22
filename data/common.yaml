@@ -1,10 +1,13 @@
 ---
+profile_motd::files_absent:
+  "/etc/motd.d/cockpit":
+  "/etc/motd.d/insights-client":
 profile_motd::hide_enc: false
 profile_motd::next_maintenance:
   - "none"
   - "none"
 #  - "2020-12-10T06:00:00"
 #  - "2020-12-10T10:00:00"
-profile_motd::next_maintenance_details: ""
+profile_motd::next_maintenance_details: "https://status.ncsa.illinois.edu"
 profile_motd::next_maintenance_timezone: "CT"
 profile_motd::notice: ""
