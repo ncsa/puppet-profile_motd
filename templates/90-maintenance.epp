@@ -1,0 +1,4 @@
+<%- | $date,
+      $details,
+| -%>
+[7mMaintenance:[0m [1m<%= $date %>[0m <%= $details %>

@@ -18,21 +18,25 @@
 # @param notice
 #   An additional message to add to the end of the motd
 #
+# @param files_absent
+#   Files to remove related to motd. Hash of parameters for file resource.
+#
 # @example
 #   include profile_motd
 class profile_motd (
-  Boolean $hide_enc,                 # boolean to hide ENC data from motd, instead display for root via profile.d file
-  Array[String] $next_maintenance,   # tuple with two date stamps, e.g., '2017-10-19T08:00:00'
-  String $next_maintenance_timezone, # timezone used for next_maintenance
-  String $next_maintenance_details,  # more details about next_maintenance
-  String $notice,                    # additional message to add to the end of the motd
+  Hash $files_absent,
+  Boolean $hide_enc,
+  Array[String] $next_maintenance,
+  String $next_maintenance_timezone,
+  String $next_maintenance_details,
+  String $notice,
 )
 {
 
-  ## PROCESS $next_maintenance AND DETERMINE $maintenance_message
+  ## PROCESS $next_maintenance AND DETERMINE $date_string
   $maintenance_begins = $next_maintenance[0]
   $maintenance_ends = $next_maintenance[1]
-  if ($maintenance_begins != 'none') {
+  if ($maintenance_begins != 'none' and ! empty($next_maintenance) ) {
     $start_array = split($next_maintenance[0], 'T')
     $start_date = $start_array[0]
     $start_time_array = split($start_array[1], ':')
@@ -49,16 +53,22 @@ class profile_motd (
     {
       $date_string = "${start_date} ${start_time} - ${end_date} ${end_time} ${next_maintenance_timezone}"
     }
-    $maintenance_message = "
-Next scheduled maintenance: ${date_string} ${next_maintenance_details}"
-  }
-  else {
-    $maintenance_message = ''
-  }
 
-  $notice_message = $notice ? {
-    default   => '',
-    String[1] => "\n${notice}",
+    $config_parameters = {
+      date    => $date_string,
+      details => $next_maintenance_details,
+    }
+    file { '/etc/motd.d/90-maintenance':
+      ensure  => 'present',
+      content => epp("${module_name}/90-maintenance.epp", $config_parameters),
+      group   => 'root',
+      mode    => '0644',
+      owner   => 'root',
+    }
+  } else {
+    file { '/etc/motd.d/90-maintenance':
+      ensure => 'absent',
+    }
   }
 
   $hw_array = split($::manufacturer, Regexp['[\s,]'])
@@ -66,13 +76,6 @@ Next scheduled maintenance: ${date_string} ${next_maintenance_details}"
   $memorysize_gb = ceiling($::memorysize_mb/1024)
   $cpu_array = split($::processor0, ' @ ')
   $cpu_speed = $cpu_array[1]
-  if ! $hide_enc {
-    $motd_enc = "\n  Site: ${::site}  Role: ${::role}"
-    $profile_ensure = 'absent'
-  } else {
-    $motd_enc = ''
-    $profile_ensure = 'file'
-  }
 
   file { '/etc/motd':
     ensure  => file,
@@ -82,12 +85,40 @@ Next scheduled maintenance: ${date_string} ${next_maintenance_details}"
     group   => '0',
   }
 
+  $motd_enc = "  Role: ${::role}  Site: ${::site}"
+  if ! $hide_enc {
+    $enc_motd_ensure = 'file'
+    $enc_profile_ensure = 'absent'
+  } else {
+    $enc_motd_ensure = 'absent'
+    $enc_profile_ensure = 'file'
+  }
   file { '/etc/profile.d/puppet_enc_display.sh':
-    ensure  => $profile_ensure,
-    content => template('profile_motd/puppet_enc_display.sh.erb'),
+    ensure  => $enc_profile_ensure,
+    content => template("${module_name}/puppet_enc_display.sh.erb"),
     mode    => '0644',
     owner   => '0',
     group   => '0',
+  }
+  file { '/etc/motd.d/20-puppet-enc':
+    ensure  => $enc_motd_ensure,
+    content => template("${module_name}/20-puppet-enc.erb"),
+    group   => 'root',
+    mode    => '0644',
+    owner   => 'root',
+  }
+
+  if ( ! empty($notice) ) {
+    $notice_ensure = 'file'
+  } else {
+    $notice_ensure = 'absent'
+  }
+  file { '/etc/motd.d/40-notice':
+    ensure  => $notice_ensure,
+    content => template("${module_name}/40-notice.erb"),
+    group   => 'root',
+    mode    => '0644',
+    owner   => 'root',
   }
 
   if ($facts['os']['release']['major'] < '8' and $facts['os']['family'] == 'RedHat') {
@@ -103,5 +134,10 @@ Next scheduled maintenance: ${date_string} ${next_maintenance_details}"
     }
     ensure_resource( 'file', '/etc/motd.d', { 'ensure' => 'directory', 'mode' => '0755', })
   }
+
+  $files_absent_defaults = {
+    ensure => 'absent',
+  }
+  ensure_resources('file', $files_absent , $files_absent_defaults)
 
 }
