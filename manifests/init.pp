@@ -30,9 +30,7 @@ class profile_motd (
   String $next_maintenance_timezone,
   String $next_maintenance_details,
   String $notice,
-)
-{
-
+) {
   ## PROCESS $next_maintenance AND DETERMINE $date_string
   $maintenance_begins = $next_maintenance[0]
   $maintenance_ends = $next_maintenance[1]
@@ -45,12 +43,10 @@ class profile_motd (
     $end_date = $end_array[0]
     $end_time_array = split($end_array[1], ':')
     $end_time = "${end_time_array[0]}:${end_time_array[1]}"
-    if ( $start_date == $end_date )
-    {
+    if ( $start_date == $end_date ) {
       $date_string = "${start_date} ${start_time}-${end_time} ${next_maintenance_timezone}"
     }
-    else
-    {
+    else {
       $date_string = "${start_date} ${start_time} - ${end_date} ${end_time} ${next_maintenance_timezone}"
     }
 
@@ -59,7 +55,7 @@ class profile_motd (
       details => $next_maintenance_details,
     }
     file { '/etc/motd.d/90-maintenance':
-      ensure  => 'present',
+      ensure  => 'file',
       content => epp("${module_name}/90-maintenance.epp", $config_parameters),
       group   => 'root',
       mode    => '0644',
@@ -71,10 +67,10 @@ class profile_motd (
     }
   }
 
-  $hw_array = split($::manufacturer, Regexp['[\s,]'])
+  $hw_array = split($facts['dmi']['manufacturer'], Regexp['[\s,]'])
   $hardware = $hw_array[0]
-  $memorysize_gb = ceiling($::memorysize_mb/1024)
-  $cpu_array = split($::processor0, ' @ ')
+  $memorysize_gb = ceiling($facts['memory']['system']['total_bytes'] * 1.073741824 /(1024*1024*1024))
+  $cpu_array = split($facts['processors']['models'][0], ' @ ')
   $cpu_speed = $cpu_array[1]
 
   file { '/etc/motd':
@@ -140,4 +136,26 @@ class profile_motd (
   }
   ensure_resources('file', $files_absent , $files_absent_defaults)
 
+  # THERE IS A BUG IN PAM SUPPORT FOR motd.d FILES THAT IT DOESN'T SORT THEM
+  # https://forums.rockylinux.org/t/cockpit-and-insights-client-files-in-etc-motd-rise-above-others-on-pam-motd-message/7699
+  # ONLY APPLIES TO RHEL 8.0-8.6 - FIXED IN 8.7
+  ## THE FOLLOWING DID NOT FIX THE BUG - FIXING THE FILE MODIFICATION TIMES DOES NOT CHANGE THE ORDER PAM DISPLAYS THE FILES
+  #if (
+  #  $facts['os']['release']['major'] == '8'
+  #  and $facts['os']['release']['minor'] >= '0'
+  #  and $facts['os']['release']['minor'] <= '6'
+  #  and $facts['os']['family'] == 'RedHat'
+  #) {
+  #  $motdd_check_command = 'MTIMESORT=$(ls -1rt /etc/motd.d) && ALPHASORT=$(ls -1 /etc/motd.d | sort -V) && test "$MTIMESORT" != "$ALPHASORT"'
+  #  exec { 'sort motd.d files':
+  #    command  => 'find /etc/motd.d -maxdepth 1 -type f | sort -V | xargs -I% sh -c \'touch % ; sleep 1s\'',
+  #    onlyif   => $motdd_check_command,
+  #    path     => [
+  #      '/bin',
+  #      '/usr/bin',
+  #      '/usr/sbin',
+  #    ],
+  #    provider => shell,
+  #  }
+  #}
 }
