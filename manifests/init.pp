@@ -30,9 +30,7 @@ class profile_motd (
   String $next_maintenance_timezone,
   String $next_maintenance_details,
   String $notice,
-)
-{
-
+) {
   ## PROCESS $next_maintenance AND DETERMINE $date_string
   $maintenance_begins = $next_maintenance[0]
   $maintenance_ends = $next_maintenance[1]
@@ -45,12 +43,10 @@ class profile_motd (
     $end_date = $end_array[0]
     $end_time_array = split($end_array[1], ':')
     $end_time = "${end_time_array[0]}:${end_time_array[1]}"
-    if ( $start_date == $end_date )
-    {
+    if ( $start_date == $end_date ) {
       $date_string = "${start_date} ${start_time}-${end_time} ${next_maintenance_timezone}"
     }
-    else
-    {
+    else {
       $date_string = "${start_date} ${start_time} - ${end_date} ${end_time} ${next_maintenance_timezone}"
     }
 
@@ -59,7 +55,7 @@ class profile_motd (
       details => $next_maintenance_details,
     }
     file { '/etc/motd.d/90-maintenance':
-      ensure  => 'present',
+      ensure  => 'file',
       content => epp("${module_name}/90-maintenance.epp", $config_parameters),
       group   => 'root',
       mode    => '0644',
@@ -71,10 +67,10 @@ class profile_motd (
     }
   }
 
-  $hw_array = split($::manufacturer, Regexp['[\s,]'])
+  $hw_array = split($facts['dmi']['manufacturer'], Regexp['[\s,]'])
   $hardware = $hw_array[0]
-  $memorysize_gb = ceiling($::memorysize_mb/1024)
-  $cpu_array = split($::processor0, ' @ ')
+  $memorysize_gb = ceiling($facts['memorysize_mb']/1024)
+  $cpu_array = split($facts['processors']['models']['0'], ' @ ')
   $cpu_speed = $cpu_array[1]
 
   file { '/etc/motd':
@@ -84,6 +80,8 @@ class profile_motd (
     owner   => '0',
     group   => '0',
   }
+
+  ensure_resource( 'file', '/etc/motd.d', { 'ensure' => 'directory', 'mode' => '0755', })
 
   $motd_enc = "  Role: ${::role}  Site: ${::site}"
   if ! $hide_enc {
@@ -106,6 +104,7 @@ class profile_motd (
     group   => 'root',
     mode    => '0644',
     owner   => 'root',
+    require => File['/etc/motd.d'],
   }
 
   if ( ! empty($notice) ) {
@@ -119,6 +118,7 @@ class profile_motd (
     group   => 'root',
     mode    => '0644',
     owner   => 'root',
+    require => File['/etc/motd.d'],
   }
 
   if ($facts['os']['release']['major'] < '8' and $facts['os']['family'] == 'RedHat') {
@@ -132,12 +132,10 @@ class profile_motd (
     file { '/etc/profile.d/motd.sh':
       source => "puppet:///modules/${module_name}/etc/profile.d/motd.sh",
     }
-    ensure_resource( 'file', '/etc/motd.d', { 'ensure' => 'directory', 'mode' => '0755', })
   }
 
   $files_absent_defaults = {
     ensure => 'absent',
   }
   ensure_resources('file', $files_absent , $files_absent_defaults)
-
 }
