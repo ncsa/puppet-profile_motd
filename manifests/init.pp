@@ -83,7 +83,7 @@ class profile_motd (
 
   ensure_resource( 'file', '/etc/motd.d', { 'ensure' => 'directory', 'mode' => '0755', })
 
-  $motd_enc = "  Role: ${facts['role']}  Site: ${facts['site']}"
+  $motd_enc = "  Role: ${role}  Site: ${site}"
   if ! $hide_enc {
     $enc_motd_ensure = 'file'
     $enc_profile_ensure = 'absent'
