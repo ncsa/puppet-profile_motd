@@ -1,5 +1,2 @@
-# ONLY RUN FOR NORMAL USERS
-if [[ $EUID -ge 1000 ]]; then
-  # FOLLOWING ECHO SUPPORTS USE OF ANSI ESCAPE CODES FOR FORMATTING
-  echo -e "$(cat /etc/motd.d/*)"
-fi
+# FOLLOWING ECHO SUPPORTS USE OF ANSI ESCAPE CODES FOR FORMATTING
+echo -e "$(cat /etc/motd.d/*)"
