@@ -70,8 +70,9 @@ class profile_motd (
   $hw_array = split($facts['dmi']['manufacturer'], Regexp['[\s,]'])
   $hardware = $hw_array[0]
   $memorysize_gb = ceiling($facts['memorysize_mb']/1024)
-  $cpu_array = split($facts['processors']['models']['0'], ' @ ')
-  $cpu_speed = $cpu_array[1]
+  #$cpu_array = split($facts['processors']['models']['0'], ' @ ')
+  #$cpu_speed = $cpu_array[1]
+  $cpu_speed = $facts['processors']['speed']
 
   file { '/etc/motd':
     ensure  => file,
