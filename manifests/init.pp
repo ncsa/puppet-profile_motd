@@ -69,10 +69,53 @@ class profile_motd (
 
   $hw_array = split($facts['dmi']['manufacturer'], Regexp['[\s,]'])
   $hardware = $hw_array[0]
-  $memorysize_gb = ceiling($facts['memorysize_mb']/1024)
-  #$cpu_array = split($facts['processors']['models']['0'], ' @ ')
-  #$cpu_speed = $cpu_array[1]
-  $cpu_speed = $facts['processors']['speed']
+  #$memorysize_gb = ceiling($facts['memory']['system']['total_bytes'] / 1024 / 1024 / 1024) + 1
+  # Convert total bytes to decimal GB
+  #$memorysize_gib = ceiling($facts['memory']['system']['total_bytes'] / 1000 / 1000 / 1000) + 1
+  # Use a scaling factor of 1,050,000,000 bytes per GB to approximate how some hardware vendors and operating systems report memory size.
+  # This value is chosen to provide a closer match to displayed memory sizes, which may differ from strict binary (1024^3) or decimal (1000^3) conversions.
+  # The scaling factor 1050000000 is intentionally non-standard.
+  # Standard conversions are 1024^3 (GiB) or 1000^3 (GB), but 1050000000 was chosen
+  # to better match reported memory sizes on certain hardware, or as an empirical adjustment.
+  $memorysize_scaled_gb = ceiling($facts['memory']['system']['total_bytes'] / 1050000000) + 1
+  #$mem_gb = $memorysize_gb
+  #$mem_gb = $memorysize_gib
+  $mem_gb = $memorysize_scaled_gb
+  # Determine rounding multiple based on thresholds
+  # Thresholds chosen to provide readable memory size display for typical server classes:
+  # - >768GB: Large enterprise servers, round to nearest 128GB for clarity
+  # - >256GB: High-memory servers, round to nearest 64GB
+  # - >128GB: Mid-range servers, round to nearest 32GB
+  # - >64GB: Standard servers, round to nearest 16GB
+  # - >32GB: Small servers, round to nearest 8GB
+  # - >16GB: Workstations, round to nearest 4GB
+  # - >1GB: Low-memory devices, round to nearest 2GB
+  # - <=1GB: Embedded/special cases, round to nearest 1GB
+  if $mem_gb > 768 {
+    $multiple = 128
+  } elsif $mem_gb > 256 {
+    $multiple = 64
+  } elsif $mem_gb > 128 {
+    $multiple = 32
+  } elsif $mem_gb > 64 {
+    $multiple = 16
+  } elsif $mem_gb > 32 {
+    $multiple = 8
+  } elsif $mem_gb > 16 {
+    $multiple = 4
+  } elsif $mem_gb > 1 {
+    $multiple = 2
+  } else {
+    $multiple = 1
+  }
+  # Round to nearest multiple
+  $display_memorysize_gb = round($mem_gb / $multiple) * $multiple
+
+  #$cpu_speed = $facts['processors']['speed']
+  $cpu_sockets = $facts['processors']['physicalcount']
+  $cpu_cores = $facts['processors']['cores']
+  #$cpu_count = $facts['processors']['count']
+  $cpu_arch = $facts['processors']['isa']
 
   file { '/etc/motd':
     ensure  => file,
