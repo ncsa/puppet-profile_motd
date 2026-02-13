@@ -165,8 +165,10 @@ class profile_motd (
     require => File['/etc/motd.d'],
   }
 
-  if ( ($facts['os']['release']['major'] < '8' and $facts['os']['family'] == 'RedHat' ) or $facts['os']['family'] == 'Suse') {
-    ## ADD /etc/motd.d/* SUPPORT TO RHEL7, SUSE, ETC
+  if ( ($facts['os']['release']['major'] < '8' and $facts['os']['family'] == 'RedHat' ) or
+       ($facts['os']['family'] == 'Suse' and $facts['os']['release']['major'] == '15' and $facts['os']['release']['minor'] < '6' ) or
+       ($facts['os']['family'] == 'Suse' and $facts['os']['release']['major'] < '15') ) {
+    ## ADD /etc/motd.d/* SUPPORT TO RHEL7, SUSE 15 SP5 and older, ETC
     File {
       mode   => '0644',
     }
